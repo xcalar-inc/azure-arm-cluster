@@ -247,7 +247,7 @@
           "fileUris": [
             "[variables('customScriptFilePath')]"
           ],
-          "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables(singleQuote), parameters('installerUrl'), variables(singleQuote), ' ', variables(singleQuote), parameters('vmName'), variables(singleQuote), ' ', variables(singleQuote), copyIndex(), variables(singleQuote), ' ', variables(singleQuote), parameters('scaleNumber'), variables(singleQuote),' >> /var/log/startup.log 2>&1')]"
+          "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables(singleQuote), parameters('installerUrl'), variables('singleQuote'), ' ', variables('singleQuote'), parameters('vmName'), variables('singleQuote'), ' ', variables('singleQuote'), copyIndex(), variables('singleQuote'), ' ', variables('singleQuote'), parameters('scaleNumber'), variables('singleQuote'),' >> /var/log/startup.log 2>&1')]"
         }
       }
     }
