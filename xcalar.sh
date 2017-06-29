@@ -22,7 +22,10 @@ if mountpoint -q /mnt/resource; then
     umount /mnt/resource
     DEV="${PART%[1-9]}"
     parted $DEV -s 'rm 1 mklabel gpt mkpart primary 1 -1'
-    mkfs.ext4 -L data -E lazy_itable_init=0,lazy_journal_init=0,discard $PART
+    for retry in $(seq 5); do
+        sleep 5
+        mkfs.ext4 -L data -E lazy_itable_init=0,lazy_journal_init=0,discard $PART && break
+    done
     UUID="$(blkid $PART | awk '{print $2}')"
     echo "LABEL=data     /mnt/data   ext4    nobarrier,relatime  0   0" | tee -a /etc/fstab
     mkdir -p /mnt/data
