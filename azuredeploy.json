@@ -248,7 +248,7 @@
           "fileUris": [
             "[variables('customScriptFilePath')]"
           ],
-          "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables('sq'), parameters('installerUrl'), variables('sq'), ' ', variables('sq'), parameters('clusterName'), variables('sq'), ' ', variables('sq'), copyIndex(), variables('sq'), ' ', variables('sq'), parameters('scaleNumber'), variables('sq'),' >> /var/log/startup.log 2>&1')]"
+          "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables('sq'), parameters('installerUrl'), variables('sq'), ' ', variables('sq'), parameters('clusterName'), variables('sq'), ' ', variables('sq'), copyIndex(), variables('sq'), ' ', variables('sq'), parameters('scaleNumber'), variables('sq'), ' ', variables('sq'), parameters('licenseKey'), variables('sq'), ' >> /var/log/startup.log 2>&1')]"
         }
       }
     }
