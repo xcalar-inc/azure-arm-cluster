@@ -2,17 +2,17 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "storageAccountType": {
+    "clusterName": {
       "type": "string",
-      "defaultValue": "Standard_LRS",
       "metadata": {
-        "description": "Storage Account type"
+        "description": "Cluster name"
       }
     },
-    "vmName": {
+    "licenseKey": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
-        "description": "VM name"
+        "description": "License Key"
       }
     },
     "vmSize": {
@@ -22,6 +22,25 @@
         "description": "Size of the VM"
       }
     },
+    "scaleNumber": {
+      "type": "int",
+      "defaultValue": 4,
+      "metadata": {
+        "description": "Number of XCE nodes to provision"
+      }
+    },
+    "adminUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password"
+      }
+    },
     "installerUrl": {
       "type": "string",
       "defaultValue": "",
@@ -29,11 +48,11 @@
         "description": "Installer Url"
       }
     },
-    "licenseKey": {
+    "storageAccountType": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": "Standard_LRS",
       "metadata": {
-        "description": "License Key"
+        "description": "Storage Account type"
       }
     },
     "imagePublisher": {
@@ -56,40 +75,22 @@
       "metadata": {
         "description": "Image SKU"
       }
-    },
-    "adminUserName": {
-      "type": "string",
-      "metadata": {
-        "description": "Admin username"
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Admin password"
-      }
-    },
-    "scaleNumber": {
-      "type": "int",
-      "defaultValue": 4,
-      "metadata": {
-        "description": "Number of XCE nodes to provision"
-      }
     }
   },
   "variables": {
-    "singleQuote": "'",
+    "sq": "'",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'xc')]",
-    "availabilitySetName": "xcalarAvSet",
-    "virtualNetworkName": "xcalarVNET",
+    "availabilitySetName": "[concat(parameters('clusterName'),'AvSet')]",
+    "virtualNetworkName": "[concat(parameters('clusterName'),'VNET')]",
     "vnetAddressPrefix": "10.0.0.0/16",
     "publicIPAddressType": "Dynamic",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "subnet1Name": "Subnet-1",
+    "subnet1Name": "[concat(parameters('clusterName'),'Subnet-1')]",
     "subnet1Prefix": "10.0.0.0/24",
-    "nicName": "xcalarNIC",
+    "nicName": "[concat(parameters('clusterName'),'NIC')]",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', variables('subnet1Name'))]",
-    "customScriptFilePath": "https://raw.githubusercontent.com/xcalar-inc/azure-arm-cluster/master/xcalar.sh",
+    "scriptsUri": "[uri(deployment().properties.templateLink.uri, '.')]",
+    "customScriptFilePath": "[concat(variables('scriptsUri'),'/xcalar.sh')]",
     "customScriptCommandToExecute": "/bin/bash xcalar.sh ",
     "vmExtensionName": "xcalarExtension"
   },
@@ -113,7 +114,7 @@
     {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(parameters('vmName'),'-publicIP', copyIndex())]",
+      "name": "[concat(parameters('clusterName'),'publicIP', copyIndex())]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "foo",
@@ -154,7 +155,7 @@
         "count": "[parameters('scaleNumber')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', parameters('vmName'), '-publicIP', copyIndex())]",
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('clusterName'), 'publicIP', copyIndex())]",
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
       ],
       "properties": {
@@ -165,7 +166,7 @@
               "privateIPAllocationMethod": "Static",
               "privateIPAddress": "[concat('10.0.0.', copyIndex(4))]",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'),'-publicIP', copyIndex()))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('clusterName'),'publicIP', copyIndex()))]"
               },
               "subnet": {
                 "id": "[variables('subnet1Ref')]"
@@ -178,7 +179,7 @@
     {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(parameters('vmName'), copyIndex())]",
+      "name": "[concat(parameters('clusterName'), copyIndex())]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "foo",
@@ -197,7 +198,7 @@
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computername": "[concat(parameters('vmName'), copyIndex())]",
+          "computername": "[concat(parameters('clusterName'), copyIndex())]",
           "adminUsername": "[parameters('adminUserName')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -228,7 +229,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('vmName'), copyIndex(),'/', variables('vmExtensionName'))]",
+      "name": "[concat(parameters('clusterName'), copyIndex(),'/', variables('vmExtensionName'))]",
       "apiVersion": "2015-05-01-preview",
       "location": "[resourceGroup().location]",
       "copy": {
@@ -236,7 +237,7 @@
         "count": "[parameters('scaleNumber')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'), copyIndex())]"
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'), copyIndex())]"
       ],
       "properties": {
         "publisher": "Microsoft.Azure.Extensions",
@@ -247,7 +248,7 @@
           "fileUris": [
             "[variables('customScriptFilePath')]"
           ],
-          "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables('singleQuote'), parameters('installerUrl'), variables('singleQuote'), ' ', variables('singleQuote'), parameters('vmName'), variables('singleQuote'), ' ', variables('singleQuote'), copyIndex(), variables('singleQuote'), ' ', variables('singleQuote'), parameters('scaleNumber'), variables('singleQuote'),' >> /var/log/startup.log 2>&1')]"
+          "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables('sq'), parameters('installerUrl'), variables('sq'), ' ', variables('sq'), parameters('clusterName'), variables('sq'), ' ', variables('sq'), copyIndex(), variables('sq'), ' ', variables('sq'), parameters('scaleNumber'), variables('sq'),' >> /var/log/startup.log 2>&1')]"
         }
       }
     }

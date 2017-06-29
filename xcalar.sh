@@ -12,10 +12,10 @@ setenforce Permissive
 sed -i -e 's/^SELINUX=enforcing.*$/SELINUX=permissive/g' /etc/selinux/config
 
 yum update -y
-yum install -y nfs-utils epel-release parted
+yum install -y nfs-utils epel-release parted curl
 yum install -y jq
 
-
+curl -sSL "${INSTALLER_URL}" > xcalar-installer.sh
 
 if mountpoint -q /mnt/resource; then
     PART="$(findmnt -n /mnt/resource  | awk '{print $2}')"
@@ -24,7 +24,7 @@ if mountpoint -q /mnt/resource; then
     parted $DEV -s 'rm 1 mklabel gpt mkpart primary 1 -1'
     for retry in $(seq 5); do
         sleep 5
-        mkfs.ext4 -L data -E lazy_itable_init=0,lazy_journal_init=0,discard $PART && break
+        mkfs.ext4 -L data -E lazy_itable_init=0,lazy_journal_init=0,discard $PART && break || echo "Retrying ..."
     done
     UUID="$(blkid $PART | awk '{print $2}')"
     echo "LABEL=data     /mnt/data   ext4    nobarrier,relatime  0   0" | tee -a /etc/fstab
@@ -61,8 +61,6 @@ mkdir -p $XLRROOT
 echo "${CLUSTER}0:/mnt/data/xcalar   $XLRROOT    nfs     defaults    0   0" | tee -a /etc/fstab
 
 mkdir -p /etc/xcalar
-
-curl -sSL "${INSTALLER_URL}" > xcalar-installer.sh
 
 if ! bash -x ./xcalar-installer.sh --nostart; then
     echo >&2 "ERROR: Failed to install xcalar"
