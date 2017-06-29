@@ -60,9 +60,7 @@ fi
 mkdir -p $XLRROOT
 echo "${CLUSTER}0:/mnt/data/xcalar   $XLRROOT    nfs     defaults    0   0" | tee -a /etc/fstab
 
-mkdir -p /etc/default/xcalar
-
-
+mkdir -p /etc/xcalar
 
 curl -sSL "${INSTALLER_URL}" > xcalar-installer.sh
 
