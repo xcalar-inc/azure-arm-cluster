@@ -29,6 +29,13 @@
         "description": "Installer Url"
       }
     },
+    "licenseKey": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "License Key"
+      }
+    },
     "imagePublisher": {
       "type": "string",
       "defaultValue": "OpenLogic",
@@ -81,8 +88,8 @@
     "subnet1Prefix": "10.0.0.0/24",
     "nicName": "xcalarNIC",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', variables('subnet1Name'))]",
-    "customScriptFilePath": "",
-    "customScriptCommandToExecute": "sh xcalar.sh",
+    "customScriptFilePath": "https://raw.githubusercontent.com/xcalar-inc/azure-arm-cluster/master/xcalar.sh",
+    "customScriptCommandToExecute": "/bin/bash xcalar.sh",
     "vmExtensionName": "xcalarExtension"
   },
   "resources": [
@@ -100,7 +107,7 @@
       "name": "[variables('availabilitySetName')]",
       "apiVersion": "2015-05-01-preview",
       "location": "[resourceGroup().location]",
-      "properties": {}
+      "properties": { }
     },
     {
       "apiVersion": "2015-05-01-preview",
