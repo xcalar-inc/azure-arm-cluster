@@ -8,12 +8,12 @@ The following instance types have been tested
 
 ## By clicking "Deploy to Azure" you agree to the Terms and Conditions below.
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fxcalar-inc%2Fazure-arm-cluster%2Fdev%2Fazuredeploy.json"
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fxcalar-inc%2Fazure-arm-cluster%2Fmaster%2Fazuredeploy.json"
     target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png" />
 </a>
 
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fxcalar-inc%2Fazure-arm-cluster%2Fdev%2Fazuredeploy.json"
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fxcalar-inc%2Fazure-arm-cluster%2Fmaster%2Fazuredeploy.json"
     target="_blank">
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
