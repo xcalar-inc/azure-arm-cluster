@@ -90,8 +90,8 @@
     "nicName": "[concat(parameters('clusterName'),'NIC')]",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', variables('subnet1Name'))]",
     "scriptsUri": "[uri(deployment().properties.templateLink.uri, '.')]",
-    "customScriptFilePath": "[concat(variables('scriptsUri'),'/xcalar.sh')]",
-    "customScriptCommandToExecute": "/bin/bash xcalar.sh ",
+    "customScriptFilePath": "[concat(variables('scriptsUri'),'/bootstrap.sh')]",
+    "customScriptCommandToExecute": "/bin/bash bootstrap.sh ",
     "vmExtensionName": "xcalarExtension"
   },
   "resources": [

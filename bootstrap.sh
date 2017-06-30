@@ -1,10 +1,22 @@
 #!/bin/bash
 
 INSTALLER_URL="$1"
-CLUSTER="$2"
-INDEX="$3"
-COUNT="$4"
+CLUSTER="${HOSTNAME%%[0-9]*}"
+INDEX="${3:-0}"
+COUNT="${4:-1}"
 LICENSE="$5"
+NFSMOUNT="${6:-${CLUSTER}0:/srv/share}"
+
+# If on a single node instance, use the local host
+# as the server
+if [ -z "$NFSHOST" ] && [ "$COUNT" = 1 ]; then
+    NFSMOUNT="${HOSTNAME}:/srv/share"
+else
+    NFSMOUNT="${CLUSTER}0:/srv/share"
+fi
+
+NFSHOST="${NFSMOUNT%%:*}"
+SHARE="${NFSMOUNT##*:}"
 
 if [ -r /etc/default/xcalar ]; then
     . /etc/default/xcalar
@@ -13,8 +25,6 @@ fi
 XCE_HOME="${XCE_HOME:-/mnt/xcalar}"
 XCE_CONFIG="${XCE_CONFIG:-/etc/xcalar/default.cfg}"
 XCE_LICENSEDIR="${XCE_LICENSEDIR:-/etc/xcalar}"
-
-SHARE=/srv/share
 
 setenforce Permissive
 sed -i -e 's/^SELINUX=enforcing.*$/SELINUX=permissive/g' /etc/selinux/config
@@ -26,8 +36,14 @@ yum install -y jq
 # Download the installer as soon as we can
 test -n "$INSTALLER_URL" && curl -sSL "$INSTALLER_URL" > installer.sh
 
+# Determine our CIDR by querying the metadata service
+curl -H Metadata:True "http://169.254.169.254/metadata/instance?api-version=2017-04-02&format=json" | jq . > metadata.json
+NETWORK="$(<metadata.json jq -r '.network.interface[].ipv4.subnet[].address')"
+MASK="$(<metadata.json jq -r '.network.interface[].ipv4.subnet[].prefix')"
+LOCALIPV4="$(<metadata.json jq -r '.network.interface[].ipv4.ipAddress[].privateIpAddress')"
+
 # Node 0 will host NFS shared storage for the cluster
-if [ "$INDEX" = 0 ]; then
+if [ "$HOSTNAME" = "$NFSHOST" ]; then
     # On some Azure instances /mnt/resource comes premounted and unaligned
     if mountpoint -q /mnt/resource; then
         PART="$(findmnt -n /mnt/resource  | awk '{print $2}')"
@@ -42,11 +58,6 @@ if [ "$INDEX" = 0 ]; then
         mkdir -p "$SHARE"
         mount "$SHARE"
     fi
-
-    # Determine our CIDR by querying the metadata service
-    curl -H Metadata:True "http://169.254.169.254/metadata/instance?api-version=2017-04-02&format=json" | jq . > metadata.json
-    NETWORK="$(<metadata.json jq -r '.network.interface[].ipv4.subnet[].address')"
-    MASK="$(<metadata.json jq -r '.network.interface[].ipv4.subnet[].prefix')"
 
     # Ensure NFS is running
     systemctl enable rpcbind
@@ -80,7 +91,7 @@ fi
 DOMAIN="$(dnsdomainname)"
 MEMBERS=()
 for NODEID in $(seq 0 $((COUNT-1))); do
-    MEMBERS+=("${CLUSTER}${NODEID}.${DOMAIN}")
+    MEMBERS+=("${CLUSTER}${NODEID}")
 done
 
 /opt/xcalar/scripts/genConfig.sh /etc/xcalar/template.cfg - "${MEMBERS[@]}" | tee "$XCE_CONFIG"
@@ -90,10 +101,22 @@ fi
 
 # Set up the mount for XcalarRoot
 mkdir -p "$XCE_HOME"
-echo "${CLUSTER}0:${SHARE}/xcalar   $XCE_HOME    nfs     defaults    0   0" | tee -a /etc/fstab
+echo "${NFSMOUNT}/xcalar   $XCE_HOME    nfs     defaults    0   0" | tee -a /etc/fstab
 
 sed -r -i -e 's@^Constants.XcalarRootCompletePath=.*$@Constants.XcalarRootCompletePath='$XCE_HOME'@g' "$XCE_CONFIG"
 
 mount "$XCE_HOME"
+mkdir -p "${XCE_HOME}/members"
+echo "$LOCALIPV4        $(hostname -f)  $(hostname -s)" > "${XCE_HOME}/members/${INDEX}"
+while :; do
+    COUNT_ONLINE=$(find "${XCE_HOME}/members/" -type f | wc -l)
+    echo >&2 "Have ${COUNT_ONLINE}/${COUNT} nodes online"
+    if [ $COUNT_ONLINE -eq $COUNT ]; then
+        break
+    fi
+    echo >&2 "Sleeping ..."
+    sleep 5
+done
+
 
 service xcalar start
