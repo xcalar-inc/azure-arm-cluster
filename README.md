@@ -6,7 +6,7 @@ The following instance types have been tested
 - Standard DS14 v2 Promo (use this if you are not sure)
 - Standard D13 v2 Promo (8 cores, 56 GB memory)
 
-## By clicking "Deploy to Azure" you agree to the Terms and Conditions below.
+## By clicking "Deploy to Azure" you agree to the [EULA](LICENSE.md)
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fxcalar-inc%2Fazure-arm-cluster%2Fmaster%2Fazuredeploy.json"
     target="_blank">
