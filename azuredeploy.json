@@ -9,7 +9,7 @@
       }
     },
     "licenseKey": {
-      "type": "string",
+      "type": "securestring",
       "defaultValue": "",
       "metadata": {
         "description": "License Key"
@@ -29,8 +29,9 @@
         "description": "Number of XCE nodes to provision"
       }
     },
-    "adminUserName": {
+    "adminUsername": {
       "type": "string",
+      "defaultValue": "azure",
       "metadata": {
         "description": "Admin username"
       }
@@ -43,7 +44,6 @@
     },
     "installerUrl": {
       "type": "string",
-      "defaultValue": "",
       "metadata": {
         "description": "Installer Url"
       }
@@ -199,7 +199,7 @@
         },
         "osProfile": {
           "computername": "[concat(parameters('clusterName'), copyIndex())]",
-          "adminUsername": "[parameters('adminUserName')]",
+          "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
         "storageProfile": {
@@ -247,10 +247,22 @@
         "settings": {
           "fileUris": [
             "[variables('customScriptFilePath')]"
-          ],
+          ]
+        },
+        "protectedSettings": {
           "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables('sq'), parameters('installerUrl'), variables('sq'), ' ', variables('sq'), parameters('clusterName'), variables('sq'), ' ', variables('sq'), copyIndex(), variables('sq'), ' ', variables('sq'), parameters('scaleNumber'), variables('sq'), ' ', variables('sq'), parameters('licenseKey'), variables('sq'), ' >> /var/log/startup.log 2>&1')]"
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+      "adminUsername": {
+          "type": "string",
+          "value": "[parameters('adminUsername')]"
+      },
+      "publicIp": {
+          "type": "string",
+          "value": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('clusterName'),'publicIP', '0'))]"
+      }
+  }
 }
