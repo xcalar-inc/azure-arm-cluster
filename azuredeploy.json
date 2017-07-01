@@ -31,7 +31,6 @@
     },
     "adminUsername": {
       "type": "string",
-      "defaultValue": "azure",
       "metadata": {
         "description": "Admin username"
       }
@@ -54,27 +53,6 @@
       "metadata": {
         "description": "Storage Account type"
       }
-    },
-    "imagePublisher": {
-      "type": "string",
-      "defaultValue": "OpenLogic",
-      "metadata": {
-        "description": "Image Publisher"
-      }
-    },
-    "imageOffer": {
-      "type": "string",
-      "defaultValue": "CentOS",
-      "metadata": {
-        "description": "Image Offer"
-      }
-    },
-    "imageSKU": {
-      "type": "string",
-      "defaultValue": "7.3",
-      "metadata": {
-        "description": "Image SKU"
-      }
     }
   },
   "variables": {
@@ -92,6 +70,9 @@
     "scriptsUri": "[uri(deployment().properties.templateLink.uri, '.')]",
     "customScriptFilePath": "[concat(variables('scriptsUri'),'/bootstrap.sh')]",
     "customScriptCommandToExecute": "/bin/bash bootstrap.sh ",
+    "imagePublisher": "OpenLogic",
+    "imageOffer": "CentOS",
+    "imageSKU": "7.3",
     "vmExtensionName": "xcalarExtension"
   },
   "resources": [
@@ -204,9 +185,9 @@
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "[parameters('imagePublisher')]",
-            "offer": "[parameters('imageOffer')]",
-            "sku": "[parameters('imageSKU')]",
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSKU')]",
             "version": "latest"
           },
           "osDisk": {
