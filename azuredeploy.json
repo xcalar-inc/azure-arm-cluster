@@ -20,7 +20,11 @@
       "defaultValue": "Standard_DS14_v2_Promo",
       "metadata": {
         "description": "Size of the VM"
-      }
+      },
+      "allowedValues": [
+          "Standard_DS13_v2_Promo",
+          "Standard_DS14_v2_Promo",
+          "Standard_DS15_v2_Promo"]
     },
     "scaleNumber": {
       "type": "int",
@@ -47,6 +51,13 @@
         "description": "Installer Url"
       }
     },
+    "bootstrapUrl": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/xcalar-inc/azure-arm-cluster/master/bootstrap.sh",
+      "metadata": {
+        "description": "Bootstrap Url"
+      }
+    },
     "storageAccountType": {
       "type": "string",
       "defaultValue": "Standard_LRS",
@@ -58,7 +69,6 @@
   "variables": {
     "sq": "'",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'xc')]",
-    "availabilitySetName": "[concat(parameters('clusterName'),'AvSet')]",
     "virtualNetworkName": "[concat(parameters('clusterName'),'VNET')]",
     "vnetAddressPrefix": "10.0.0.0/16",
     "publicIPAddressType": "Dynamic",
@@ -67,8 +77,7 @@
     "subnet1Prefix": "10.0.0.0/24",
     "nicName": "[concat(parameters('clusterName'),'NIC')]",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', variables('subnet1Name'))]",
-    "scriptsUri": "[uri(deployment().properties.templateLink.uri, '.')]",
-    "customScriptFilePath": "[concat(variables('scriptsUri'),'/bootstrap.sh')]",
+    "customScriptFilePath": "[parameters('bootstrapUrl')]",
     "customScriptCommandToExecute": "/bin/bash bootstrap.sh ",
     "imagePublisher": "OpenLogic",
     "imageOffer": "CentOS",
@@ -84,13 +93,6 @@
       "properties": {
         "accountType": "[parameters('storageAccountType')]"
       }
-    },
-    {
-      "type": "Microsoft.Compute/availabilitySets",
-      "name": "[variables('availabilitySetName')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[resourceGroup().location]",
-      "properties": { }
     },
     {
       "apiVersion": "2015-05-01-preview",
@@ -168,13 +170,9 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyIndex())]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyIndex())]"
       ],
       "properties": {
-        "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
-        },
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
@@ -231,7 +229,7 @@
           ]
         },
         "protectedSettings": {
-          "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables('sq'), parameters('installerUrl'), variables('sq'), ' ', variables('sq'), parameters('clusterName'), variables('sq'), ' ', variables('sq'), copyIndex(), variables('sq'), ' ', variables('sq'), parameters('scaleNumber'), variables('sq'), ' ', variables('sq'), parameters('licenseKey'), variables('sq'), ' >> /var/log/startup.log 2>&1')]"
+          "commandToExecute": "[concat(variables('customScriptCommandToExecute'), variables('sq'), parameters('scaleNumber'), variables('sq'), ' ', variables('sq'), parameters('installerUrl'), variables('sq'), ' ', variables('sq'), parameters('clusterName'), variables('sq'), ' ', variables('sq'), copyIndex(), variables('sq'), ' ', variables('sq'), parameters('licenseKey'), variables('sq'), ' >> /var/log/startup.log 2>&1')]"
         }
       }
     }
